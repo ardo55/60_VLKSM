@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Таймер светофора</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      text-align: center;
+      padding: 50px;
+    }
+    .timer {
+      font-size: 3em;
+      margin-bottom: 20px;
+    }
+    .priority {
+      font-size: 2em;
+      padding: 10px 20px;
+      border-radius: 10px;
+      display: inline-block;
+      color: #fff;
+    }
+    .left {
+      background-color: #4caf50;
+    }
+    .right {
+      background-color: #2196f3;
+    }
+  </style>
+</head>
+<body>
+  <h1>Таймер приоритета светофора</h1>
+  <div class="timer" id="timer"></div>
+  <div class="priority" id="priority"></div>
+
+  <script>
+    const schedule = [
+      { start: "05:00", end: "08:30", priority: "Левый берег" },
+      { start: "08:30", end: "09:30", priority: "Правый берег" },
+      { start: "09:30", end: "11:00", priority: "Левый берег" },
+      { start: "11:00", end: "12:15", priority: "Правый берег" },
+      { start: "12:15", end: "13:45", priority: "Левый берег" },
+      { start: "13:45", end: "15:00", priority: "Правый берег" },
+      { start: "15:00", end: "16:30", priority: "Левый берег" },
+      { start: "16:30", end: "19:20", priority: "Правый берег" },
+      { start: "19:20", end: "20:30", priority: "Левый берег" },
+      { start: "20:30", end: "21:15", priority: "Правый берег" },
+      { start: "21:15", end: "23:00", priority: "Левый берег" },
+      { start: "23:00", end: "05:00", priority: "Правый берег", overnight: true }
+    ];
+
+    function updateTimer() {
+      const now = new Date();
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+      let currentPeriod;
+
+      for (let period of schedule) {
+        const [startH, startM] = period.start.split(":").map(Number);
+        const [endH, endM] = period.end.split(":").map(Number);
+        let start = startH * 60 + startM;
+        let end = endH * 60 + endM;
+
+        if (period.overnight && currentMinutes < 300) end += 1440;
+        if (period.overnight && currentMinutes < start) start -= 1440;
+
+        if (currentMinutes >= start && currentMinutes < end) {
+          currentPeriod = { ...period, start, end };
+          break;
+        }
+      }
+
+      if (currentPeriod) {
+        const remaining = currentPeriod.end - currentMinutes;
+        const mins = String(remaining % 60).padStart(2, '0');
+        const hrs = String(Math.floor(remaining / 60)).padStart(2, '0');
+
+        document.getElementById("timer").textContent = `До конца приоритета: ${hrs}:${mins}`;
+        const priorityEl = document.getElementById("priority");
+        priorityEl.textContent = currentPeriod.priority;
+        priorityEl.className = "priority " + (currentPeriod.priority === "Левый берег" ? "left" : "right");
+      } else {
+        document.getElementById("timer").textContent = "Нет текущего периода";
+        document.getElementById("priority").textContent = "";
+        document.getElementById("priority").className = "priority";
+      }
+    }
+
+    updateTimer();
+    setInterval(updateTimer, 60000);
+  </script>
+</body>
+</html>
